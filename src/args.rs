@@ -1,6 +1,6 @@
 use crate::coordinate_system::geographic::LLBBox;
 use clap::Parser;
-use std::path::PathBuf;
+use std::path::Path;
 use std::time::Duration;
 
 /// Command-line arguments parser
@@ -21,7 +21,7 @@ pub struct Args {
 
     /// Path to the Minecraft world (required)
     #[arg(long, value_parser = validate_minecraft_world_path)]
-    pub path: PathBuf,
+    pub path: String,
 
     /// Downloader method (requests/curl/wget) (optional)
     #[arg(long, default_value = "requests")]
@@ -62,10 +62,14 @@ pub struct Args {
     /// Spawn point coordinates (lat, lng)
     #[arg(skip)]
     pub spawn_point: Option<(f64, f64)>,
+    
+    /// Counterclockwise rotation angle in degrees [max: 90] (optional)
+    #[clap(long, default_value_t = 0.0)]
+    pub rotation_angle: f64,
 }
 
-fn validate_minecraft_world_path(path: &str) -> Result<PathBuf, String> {
-    let mc_world_path = PathBuf::from(path);
+fn validate_minecraft_world_path(path: &str) -> Result<String, String> {
+    let mc_world_path = Path::new(path);
     if !mc_world_path.exists() {
         return Err(format!("Path does not exist: {path}"));
     }
@@ -76,7 +80,7 @@ fn validate_minecraft_world_path(path: &str) -> Result<PathBuf, String> {
     if !region.is_dir() {
         return Err(format!("No Minecraft world found at {region:?}"));
     }
-    Ok(mc_world_path)
+    Ok(path.to_string())
 }
 
 fn parse_duration(arg: &str) -> Result<std::time::Duration, std::num::ParseIntError> {
